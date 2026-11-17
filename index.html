@@ -43,6 +43,7 @@ main{padding:0 14px 40px;max-width:720px;margin:auto}
 <button id="next">Next ▶</button>
 </div>
 <div id="mcBtns" style="display:none"></div>
+<div id="review" style="display:none;background:#fff;color:#111827;border-radius:16px;padding:20px;margin-top:12px"></div>
 <div class="row"><input id="search" placeholder="Search e.g. DNS, RAID, USB…" style="flex:1"></div>
 <p class="hint">Tap card to flip. Answers auto-expand acronyms in ( ). Example: TCP becomes TCP (Transmission Control Protocol). Works offline on phone/desktop.</p>
 </main>
@@ -70,6 +71,7 @@ count=document.getElementById('count'), score=document.getElementById('score'),
 mode=document.getElementById('mode'), dir=document.getElementById('dir');
 function curDir(){let d=dir.value; if(d==='mix') return Math.random()<0.5?'a2d':'d2a'; return d;}
 function render(){
+  document.getElementById('review').style.display='none';
   const cardId=order[idx];
   const d=DATA[cardId];
   if(cardId!==prevCardId || mode.value!==prevModeVal || dir.value!==prevDirVal){ if(mode.value==='flash' && !flipped && dir.value!=='mix') thisDir=dir.value; else if(mode.value==='mc') thisDir=curDir(); else if(dir.value!=='mix') thisDir=dir.value; else thisDir=curDir(); prevCardId=cardId; prevModeVal=mode.value; prevDirVal=dir.value; }
@@ -104,12 +106,36 @@ function render(){
       box.querySelectorAll('button').forEach(x=>{x.disabled=true; x.style.opacity='0.9';});
       const pick=+b.dataset.i;
       if(pick===mcAnswer){b.style.background='#15803d';known.add(order[idx]);wrong.delete(order[idx]);} else {b.style.background='#b91c1c';wrong.add(order[idx]);known.delete(order[idx]);box.children[mcAnswer].style.background='#15803d';}
-      update(); mcTimeout=setTimeout(()=>{mcTimeout=null; idx=(idx+1)%order.length;flipped=false;mcLocked=false;render();},700);
+      update(); mcTimeout=setTimeout(()=>{mcTimeout=null; if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;mcLocked=false;render();},700);
     });
   }
   update();
 }
-function update(){count.textContent='Card '+(idx+1)+'/'+order.length;score.textContent='Knew: '+known.size+' • Review: '+wrong.size;bar.style.width=((known.size+wrong.size)/order.length*100)+'%';}
+function update(){let done=0; for(const oi of order){ if(known.has(oi)||wrong.has(oi)) done++; } count.textContent='Card '+(idx+1)+'/'+order.length;score.textContent='Knew: '+known.size+' • Review: '+wrong.size;bar.style.width=(done/Math.max(1,order.length)*100)+'%';}
+function isRoundComplete(){ for(const oi of order){ if(!known.has(oi) && !wrong.has(oi)) return false; } return true; }
+function showReview(){
+  clearPending();
+  document.getElementById('flashBtns').style.display='none';
+  document.getElementById('mcBtns').style.display='none';
+  const box=document.getElementById('review'); box.style.display='block';
+  const missed=order.filter(oi=>wrong.has(oi));
+  const total=order.length, mc=missed.length, ok=total-mc;
+  let h='<div style="font-size:20px;font-weight:800">Done! '+ok+'/'+total+' correct</div>';
+  if(mc===0){ h+='<p style="font-size:16px">Perfect — nothing missed.</p>'; }
+  else {
+    h+='<p style="font-size:15px">You missed '+mc+':</p>';
+    missed.forEach(oi=>{ const d=DATA[oi]; h+='<div style="text-align:left;border-top:1px solid #e5e7eb;padding:10px 0"><b>'+esc(d.a)+'</b> — <b>'+esc(d.n)+'</b><br><span style="font-size:14px;color:#374151">'+esc(expandAcros(d.f,d.a))+'</span></div>'; });
+  }
+  h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="retryBtn" class="primary">Retry missed ('+mc+')</button><button id="resetBtn">Reset all</button><button id="contBtn">Continue</button></div>';
+  box.innerHTML=h;
+  document.getElementById('retryBtn').onclick=()=>{ if(missed.length===0){ resetAll(); return; } missed.forEach(m=>wrong.delete(m)); order=fyShuffle([...missed]); idx=0; flipped=false; box.style.display='none'; render(); };
+  // retry: keep wrong set so they show again until correct (correct answers delete from wrong via normal handler)
+  document.getElementById('resetBtn').onclick=()=>{ resetAll(); };
+  document.getElementById('contBtn').onclick=()=>{ box.style.display='none'; render(); };
+  card.innerHTML='<div class="acro">Review</div><div class="cat">'+ok+'/'+total+' — see below</div>';
+  update();
+}
+function resetAll(){ clearPending(); known.clear(); wrong.clear(); order=fyShuffle(DATA.map((_,i)=>i)); idx=0; flipped=false; document.getElementById('review').style.display='none'; render(); }
 document.getElementById('next').onclick=()=>{clearPending();idx=(idx+1)%order.length;flipped=false;render();};
 document.getElementById('prev').onclick=()=>{clearPending();idx=(idx-1+order.length)%order.length;flipped=false;render();};
 document.getElementById('flip').onclick=()=>{ if(mode.value==='mc' && mcLocked) return; flipped=!flipped;render(); };
