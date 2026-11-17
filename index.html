@@ -73,7 +73,7 @@ function expandAcros(text, skipSelf){
     });
   }catch(e){ return text; }
 }
-let wrongDetail={}, order=DATA.map((_,i)=>i), idx=0, flipped=false, known=new Set(), wrong=new Set(), mcAnswer=-1, thisDir='a2d', mcLocked=false, mcTimeout=null;
+let wrongDetail={}, order=DATA.map((_,i)=>i), idx=0, flipped=false, known=new Set(), wrong=new Set(), mcAnswer=-1, thisDir='a2d', mcLocked=false, mcTimeout=null, reviewOpen=false;
 function clearPending(){ if(mcTimeout){ clearTimeout(mcTimeout); mcTimeout=null; } mcLocked=false; }
 function fyShuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;').replace(/\//g,'&#x2F;'); }
@@ -83,6 +83,7 @@ count=document.getElementById('count'), score=document.getElementById('score'),
 mode=document.getElementById('mode'), dir=document.getElementById('dir');
 function curDir(){let d=dir.value; if(d==='mix') return Math.random()<0.5?'a2d':'d2a'; return d;}
 function render(){
+  reviewOpen=false;
   document.getElementById('review').style.display='none';
   const cardId=order[idx];
   const d=DATA[cardId];
@@ -138,15 +139,27 @@ function update(){let done=0; for(const oi of order){ if(known.has(oi)||wrong.ha
 function isRoundComplete(){ for(const oi of order){ if(!known.has(oi) && !wrong.has(oi)) return false; } return true; }
 function showReview(){
   clearPending();
+  reviewOpen=true;
   document.getElementById('flashBtns').style.display='none';
   document.getElementById('mcBtns').style.display='none';
+  document.getElementById('searchRow').style.display='none';
+  document.getElementById('flip').style.display='none';
   const box=document.getElementById('review'); box.style.display='block';
   const missed=order.filter(oi=>wrong.has(oi));
   const total=order.length, mc=missed.length, ok=total-mc;
+  const isMC = mode.value==='mc';
   let h='<div style="font-size:20px;font-weight:800">Done! '+ok+'/'+total+' correct</div>';
   if(mc===0){ h+='<p style="font-size:16px;color:#15803d;font-weight:700">Perfect — nothing missed.</p>'; }
+  else if(!isMC) {
+    h+='<p style="font-size:15px">You missed '+mc+'. Review below:</p>';
+    missed.forEach(oi=>{ const d=DATA[oi];
+      h+='<div style="text-align:left;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0;background:#f9fafb">';
+      h+='<div style="font-size:15px"><b>'+esc(d.a)+'</b> — <b>'+esc(d.n)+'</b></div>';
+      h+='<div style="font-size:14px;color:#374151;margin-top:6px">'+esc(expandAcros(d.f,d.a))+'</div>';
+      h+='</div>'; });
+  }
   else {
-    h+='<p style="font-size:15px">You missed '+mc+': review red = your pick, green = correct.</p>';
+    h+='<p style="font-size:15px">You missed '+mc+': <span style="color:#b91c1c;font-weight:700">red = your pick</span>, <span style="color:#15803d;font-weight:700">green = correct</span>.</p>';
     missed.forEach(oi=>{ const d=DATA[oi]; const wd=wrongDetail[oi];
       h+='<div style="text-align:left;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0;background:#f9fafb">';
       if(wd && wd.dir==='a2d'){
@@ -170,14 +183,14 @@ function showReview(){
   card.innerHTML='<div class="acro">Review</div><div class="cat">'+ok+'/'+total+' — see below</div>';
   update();
 }
-function resetAll(){ clearPending(); known.clear(); wrong.clear(); wrongDetail={}; prevCardId=null; prevModeVal=''; prevDirVal=''; order=fyShuffle(DATA.map((_,i)=>i)); idx=0; flipped=false; document.getElementById('review').style.display='none'; render(); }
-document.getElementById('next').onclick=()=>{clearPending();idx=(idx+1)%order.length;flipped=false;render();};
-document.getElementById('prev').onclick=()=>{clearPending();idx=(idx-1+order.length)%order.length;flipped=false;render();};
-document.getElementById('flip').onclick=()=>{ if(mode.value==='mc' && mcLocked) return; flipped=!flipped;render(); };
-card.onclick=()=>{if(mode.value==='flash'){flipped=!flipped;render();}};
-document.getElementById('know').onclick=()=>{clearPending();known.add(order[idx]);wrong.delete(order[idx]); if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;render();};
-document.getElementById('dont').onclick=()=>{clearPending();wrong.add(order[idx]);known.delete(order[idx]); if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;render();};
-document.getElementById('shuffle').onclick=()=>{clearPending();order=fyShuffle([...order]);idx=0;flipped=false;render();};
+function resetAll(){ clearPending(); known.clear(); wrong.clear(); wrongDetail={}; prevCardId=null; prevModeVal=''; prevDirVal=''; const pool=DATA.map((_,i)=>i).filter(typeof inFilter==='function'?inFilter:()=>true); order=fyShuffle([...pool]); idx=0; flipped=false; document.getElementById('review').style.display='none'; render(); }
+document.getElementById('next').onclick=()=>{ if(reviewOpen) return; clearPending();idx=(idx+1)%order.length;flipped=false;render();};
+document.getElementById('prev').onclick=()=>{ if(reviewOpen) return; clearPending();idx=(idx-1+order.length)%order.length;flipped=false;render();};
+document.getElementById('flip').onclick=()=>{ if(reviewOpen) return; if(mode.value==='mc' && mcLocked) return; flipped=!flipped;render(); };
+card.onclick=()=>{ if(reviewOpen) return; if(mode.value==='flash'){flipped=!flipped;render();}};
+document.getElementById('know').onclick=()=>{ if(reviewOpen) return; clearPending();known.add(order[idx]);wrong.delete(order[idx]); if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;render();};
+document.getElementById('dont').onclick=()=>{ if(reviewOpen) return; clearPending();wrong.add(order[idx]);known.delete(order[idx]); if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;render();};
+document.getElementById('shuffle').onclick=()=>{ if(reviewOpen) return; clearPending();order=fyShuffle([...order]);idx=0;flipped=false;render();};
 mode.onchange=()=>{clearPending();flipped=false;render();}; dir.onchange=()=>{clearPending();render();};
 document.getElementById('exam').onchange=e=>{ examFilter=e.target.value; applyExamFilter(); };
 document.getElementById('resetTop').onclick=()=>{ resetAll(); };
