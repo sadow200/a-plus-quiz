@@ -64,7 +64,7 @@ function expandAcros(text, skipSelf){
 let order=DATA.map((_,i)=>i), idx=0, flipped=false, known=new Set(), wrong=new Set(), mcAnswer=-1, thisDir='a2d', mcLocked=false, mcTimeout=null;
 function clearPending(){ if(mcTimeout){ clearTimeout(mcTimeout); mcTimeout=null; } mcLocked=false; }
 function fyShuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;').replace(/\//g,'&#x2F;'); }
 let prevCardId=null, prevModeVal='', prevDirVal='';
 const card=document.getElementById('card'), bar=document.getElementById('bar'),
 count=document.getElementById('count'), score=document.getElementById('score'),
@@ -75,7 +75,8 @@ function render(){
   const cardId=order[idx];
   const d=DATA[cardId];
   if(cardId!==prevCardId || mode.value!==prevModeVal || dir.value!==prevDirVal){ if(mode.value==='flash' && !flipped && dir.value!=='mix') thisDir=dir.value; else if(mode.value==='mc') thisDir=curDir(); else if(dir.value!=='mix') thisDir=dir.value; else thisDir=curDir(); prevCardId=cardId; prevModeVal=mode.value; prevDirVal=dir.value; }
-  const backFunc=expandAcros(d.f,d.a);
+  if(!DATA.length) { card.innerHTML='<div class="acro">No data</div>'; return; }
+  const backFunc=esc(expandAcros(d.f,d.a));
   if(mode.value==='flash'){
     document.getElementById('flashBtns').style.display='flex';
     document.getElementById('mcBtns').style.display='none';
@@ -90,7 +91,7 @@ function render(){
     const box=document.getElementById('mcBtns'); box.style.display='block';
     mcLocked=false;
     let opts=new Set([order[idx]]);
-    while(opts.size<4) opts.add(Math.floor(Math.random()*DATA.length));
+    while(opts.size<Math.min(4,DATA.length)) opts.add(Math.floor(Math.random()*DATA.length));
     opts=fyShuffle([...opts]);
     mcAnswer=opts.indexOf(order[idx]);
     if(thisDir==='a2d'){
@@ -129,9 +130,8 @@ function showReview(){
   h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="retryBtn" class="primary">Retry missed ('+mc+')</button><button id="resetBtn">Reset all</button><button id="contBtn">Continue</button></div>';
   box.innerHTML=h;
   document.getElementById('retryBtn').onclick=()=>{ if(missed.length===0){ resetAll(); return; } missed.forEach(m=>wrong.delete(m)); order=fyShuffle([...missed]); idx=0; flipped=false; box.style.display='none'; render(); };
-  // retry: keep wrong set so they show again until correct (correct answers delete from wrong via normal handler)
   document.getElementById('resetBtn').onclick=()=>{ resetAll(); };
-  document.getElementById('contBtn').onclick=()=>{ box.style.display='none'; render(); };
+  document.getElementById('contBtn').onclick=()=>{ resetAll(); };
   card.innerHTML='<div class="acro">Review</div><div class="cat">'+ok+'/'+total+' — see below</div>';
   update();
 }
@@ -140,12 +140,12 @@ document.getElementById('next').onclick=()=>{clearPending();idx=(idx+1)%order.le
 document.getElementById('prev').onclick=()=>{clearPending();idx=(idx-1+order.length)%order.length;flipped=false;render();};
 document.getElementById('flip').onclick=()=>{ if(mode.value==='mc' && mcLocked) return; flipped=!flipped;render(); };
 card.onclick=()=>{if(mode.value==='flash'){flipped=!flipped;render();}};
-document.getElementById('know').onclick=()=>{clearPending();known.add(order[idx]);wrong.delete(order[idx]);idx=(idx+1)%order.length;flipped=false;render();};
-document.getElementById('dont').onclick=()=>{clearPending();wrong.add(order[idx]);known.delete(order[idx]);idx=(idx+1)%order.length;flipped=false;render();};
+document.getElementById('know').onclick=()=>{clearPending();known.add(order[idx]);wrong.delete(order[idx]); if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;render();};
+document.getElementById('dont').onclick=()=>{clearPending();wrong.add(order[idx]);known.delete(order[idx]); if(isRoundComplete()){ showReview(); return; } idx=(idx+1)%order.length;flipped=false;render();};
 document.getElementById('shuffle').onclick=()=>{clearPending();order=fyShuffle([...order]);idx=0;flipped=false;render();};
 mode.onchange=()=>{clearPending();flipped=false;render();}; dir.onchange=()=>{clearPending();render();};
 const searchBox=document.getElementById('search');
-searchBox.addEventListener('keydown',e=>{ if(e.key!=='Enter')return; const q=searchBox.value.trim().toLowerCase(); if(!q)return; const f=DATA.findIndex(d=>d.a.toLowerCase()===q||d.n.toLowerCase().includes(q)); if(f>=0){clearPending(); if(order.length!==DATA.length){order=DATA.map((_,i)=>i);} const oi=order.indexOf(f); idx=oi>=0?oi:0; flipped=true; render(); }});
+searchBox.addEventListener('keydown',e=>{ if(e.key!=='Enter')return; const q=searchBox.value.trim().toLowerCase(); if(!q)return; clearPending(); let f=order.map(oi=>DATA[oi]).findIndex(d=>d.a.toLowerCase()===q||d.n.toLowerCase().includes(q)); if(f>=0){ idx=f; flipped=true; render(); return; } const g=DATA.findIndex(d=>d.a.toLowerCase()===q||d.n.toLowerCase().includes(q)); if(g>=0){ order=DATA.map((_,i)=>i); idx=order.indexOf(g); flipped=true; render(); }});
 order=fyShuffle([...order]); idx=0; flipped=false; render();
 </script>
 </body>
