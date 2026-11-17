@@ -94,7 +94,7 @@ function render(){
     opts=fyShuffle([...opts]);
     mcAnswer=opts.indexOf(order[idx]);
     if(thisDir==='a2d'){
-      card.innerHTML='<div class="acro">'+esc(d.a)+'</div><div class="cat">Pick full name</div>';
+      card.innerHTML='<div class="acro">'+esc(d.a)+'</div><div class="cat">Pick definition</div>';
       box.innerHTML=opts.map((oi,i)=>{const o=DATA[oi];return '<button data-i="'+i+'"><span>'+esc(expandAcros(o.f,o.a))+'</span></button>'}).join('');
     } else {
       card.innerHTML='<div class="func">'+backFunc+'</div><div class="cat">Pick acronym</div>';
