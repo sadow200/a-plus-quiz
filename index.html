@@ -95,10 +95,10 @@ function render(){
     mcAnswer=opts.indexOf(order[idx]);
     if(thisDir==='a2d'){
       card.innerHTML='<div class="acro">'+esc(d.a)+'</div><div class="cat">Pick full name</div>';
-      box.innerHTML=opts.map((oi,i)=>{const o=DATA[oi];return '<button data-i="'+i+'"><b>'+esc(o.n)+'</b><br><span style="color:#94a3b8">'+esc(expandAcros(o.f,o.a))+'</span></button>'}).join('');
+      box.innerHTML=opts.map((oi,i)=>{const o=DATA[oi];return '<button data-i="'+i+'"><span>'+esc(expandAcros(o.f,o.a))+'</span></button>'}).join('');
     } else {
       card.innerHTML='<div class="func">'+backFunc+'</div><div class="cat">Pick acronym</div>';
-      box.innerHTML=opts.map((oi,i)=>'<button data-i="'+i+'"><b>'+esc(DATA[oi].a)+'</b> — '+esc(DATA[oi].n)+'</button>').join('');
+      box.innerHTML=opts.map((oi,i)=>'<button data-i="'+i+'"><b>'+esc(DATA[oi].a)+'</b></button>').join('');
     }
     box.querySelectorAll('button').forEach(b=>b.onclick=()=>{
       if(mcLocked) return;
