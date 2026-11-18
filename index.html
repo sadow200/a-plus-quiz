@@ -27,7 +27,7 @@ main{padding:0 14px 40px;max-width:720px;margin:auto}
 <body>
 <header><h1>CompTIA A+ Quiz — 254 Terms <small>V15 1201/1202 • detailed</small></h1></header>
 <div class="controls">
-<select id="mode"><option value="flash">Flashcards</option><option value="mc">Multiple Choice</option></select>
+<select id="mode"><option value="flash">Flashcards</option><option value="mc">Multiple Choice</option><option value="tests">Practice Tests</option></select>
 <select id="dir"><option value="a2d">Acronym → Definition</option><option value="d2a">Definition → Acronym</option><option value="mix">Mixed</option></select>
 <select id="exam"><option value="all">All Exams (254)</option><option value="1201">Core 1 – 1201 (163)</option><option value="1202">Core 2 – 1202 (110)</option></select>
 <button id="shuffle" class="primary">Shuffle</button>
@@ -45,6 +45,7 @@ main{padding:0 14px 40px;max-width:720px;margin:auto}
 <button id="next">Next ▶</button>
 </div>
 <div id="mcBtns" style="display:none"></div>
+<div id="testsPanel" style="display:none;background:#fff;color:#111827;border-radius:16px;padding:20px;margin-top:6px;text-align:left"></div>
 <div id="review" style="display:none;background:#fff;color:#111827;border-radius:16px;padding:20px;margin-top:12px"></div>
 <div class="row" id="searchRow"><input id="search" placeholder="Search e.g. DNS, RAID, USB… (Enter)" style="flex:1"></div>
 <p class="hint" id="hint">Tap card to flip. Answers auto-expand acronyms in parentheses. Example: TCP becomes TCP (Transmission Control Protocol). Works offline on phone/desktop.</p>
@@ -85,6 +86,8 @@ function curDir(){let d=dir.value; if(d==='mix') return Math.random()<0.5?'a2d':
 function render(){
   reviewOpen=false;
   document.getElementById('review').style.display='none';
+  document.getElementById('testsPanel').style.display='none';
+  card.style.display='';
   const cardId=order[idx];
   const d=DATA[cardId];
   if(cardId!==prevCardId || mode.value!==prevModeVal || dir.value!==prevDirVal){ if(mode.value==='flash' && !flipped && dir.value!=='mix') thisDir=dir.value; else if(mode.value==='mc') thisDir=curDir(); else if(dir.value!=='mix') thisDir=dir.value; else thisDir=curDir(); prevCardId=cardId; prevModeVal=mode.value; prevDirVal=dir.value; }
@@ -96,6 +99,8 @@ function render(){
   document.getElementById('hint').textContent=isFlash
     ? 'Tap card to flip. Answers auto-expand acronyms in parentheses. Example: TCP becomes TCP (Transmission Control Protocol). Works offline on phone/desktop.'
     : 'Pick the correct answer. Acronyms in answers are expanded in parentheses. Progress saves below.';
+  if(mode.value==='tests'){ showTests(); return; }
+  card.style.display='';
   if(isFlash){
     document.getElementById('flashBtns').style.display='flex';
     document.getElementById('mcBtns').style.display='none';
@@ -134,6 +139,35 @@ function render(){
     });
   }
   update();
+}
+const EC_BASE="https://www.examcompass.com";
+const EC_C1T=["Mobile Device Hardware Servicing|mobile-device-hardware-servicing","Mobile Device Connection Methods|mobile-device-connection-methods","Mobile Device Accessories|mobile-device-accessories","Mobile Device Network Connectivity|mobile-device-network-connectivity","Mobile Device Application Support|mobile-device-application-support","Network Protocols|network-protocols","TCP & UDP Ports|TCP_PORTS","Wireless Networking Technologies|wireless-networking-technologies","Network Services|network-services","Network Configuration Concepts|network-configuration-concepts","Common Networking Hardware|common-networking-hardware","IP Addressing|ip-addressing","Internet Connection Types|internet-connection-types","Network Types|network-types","Networking Tools|networking-tools","Display Devices|display-devices","Cabling|cabling","Connector|connector","RAM|ram","Storage Devices|storage-devices","Motherboard|motherboard","BIOS|bios","CPU|cpu","Power Supply|power-supply","Multifunction Devices|multifunction-devices","Printer|printer","Virtualization Concepts|virtualization-concepts","Cloud Computing Concepts|cloud-computing-concepts","Core PC Hardware Troubleshooting|core-pc-hardware-troubleshooting","Storage and RAID Troubleshooting|storage-and-raid-troubleshooting","Display Devices Troubleshooting|display-devices-troubleshooting","Mobile Devices Troubleshooting|mobile-devices-troubleshooting","Network Troubleshooting|network-troubleshooting","Printer Troubleshooting|printer-troubleshooting"];
+const EC_C2T=["Common OS Types|common-os-types","Filesystem Types|filesystem-types","OS Boot Methods|os-boot-methods","OS Installation Methods|os-installation-methods","Microsoft Windows Editions|microsoft-windows-editions","MS Windows Basic Features|ms-windows-basic-features","Windows Task Manager|windows-task-manager","Windows MMC Snap-ins|windows-mmc-snap-ins","Windows Additional Admin Tools|windows-additional-admin-tools","Microsoft Command-Line Tools|microsoft-command-line-tools","Microsoft Windows Settings|microsoft-windows-settings","Windows Networking Features|windows-networking-features","macOS|macos","Linux Command Line|linux-command-line","Linux OS Features & Tools|linux-os-features-and-tools","Physical Security Concepts|physical-security-concepts","Logical Security Concepts|logical-security-concepts","Windows OS Security|windows-os-security","NTFS & Share Permissions|ntfs-and-share-permissions","Active Directory|active-directory","Wireless Security|wireless-security","Malware|malware","Social Engineering|social-engineering","Threats & Vulnerabilities|threats-and-vulnerabilities","Malware Removal Procedures|malware-removal-procedures","Workstation Security|workstation-security","Mobile Device Security|mobile-device-security","Data Destruction & Disposal|data-destruction-and-disposal-methods","SOHO Network Security|soho-network-security","Web Browser Security|web-browser-security","Windows OS Troubleshooting|windows-os-troubleshooting","Mobile OS and App Troubleshooting|mobile-os-and-app-troubleshooting","Common PC Security Issues|common-pc-security-issues-troubleshooting","Ticketing Systems|ticketing-systems","Asset Management|asset-management","Change Management Procedures|change-management-procedures","Backup & Recovery Methods|backup-and-recovery-methods","Common Safety Procedures|common-safety-procedures","Environmental Impacts & Controls|environmental-impacts-and-controls","Incident Response|incident-response","Software Licensing Concepts|software-licensing-concepts","Regulated Data|regulated-data","Communication & Professionalism|communication-and-professionalism","Scripting Basics|scripting-basics","Remote Access Technologies|remote-access-technologies","Basic AI Concepts|basic-ai-concepts"];
+function ecTopic(exam,slug){ if(slug==="TCP_PORTS") return EC_BASE+"/comptia-a-plus-220-1201-certification-exam-tcp-and-Udp-ports-quiz"; return EC_BASE+"/comptia-a-plus-220-"+exam+"-certification-exam-"+slug+"-quiz"; }
+function ecFull(exam,i){ return EC_BASE+"/comptia-a-plus-certification-practice-test-"+i+"-exam-220-"+exam; }
+function ecAcro(exam,i){ return EC_BASE+"/comptia-a-plus-220-"+exam+"-exam-acronyms-quiz-part-"+i; }
+function showTests(){
+  clearPending();
+  document.getElementById('flashBtns').style.display='none';
+  document.getElementById('mcBtns').style.display='none';
+  document.getElementById('review').style.display='none';
+  document.getElementById('searchRow').style.display='none';
+  document.getElementById('flip').style.display='none';
+  card.style.display='none';
+  const box=document.getElementById('testsPanel'); box.style.display='block';
+  let h='<div style="font-size:20px;font-weight:800">ExamCompass Practice Tests</div><p style="font-size:14px;color:#4b5563">Free on examcompass.com — tap any test, it opens in a new tab. Use these alongside the flashcards above.</p>';
+  function group(title, links){ h+='<details style="margin:10px 0;border:1px solid #e5e7eb;border-radius:10px;padding:10px"><summary style="font-weight:700;cursor:pointer">'+title+'</summary><div style="margin-top:8px">'; links.forEach(l=>{ h+='<a href="'+l.u+'" target="_blank" rel="noopener" style="display:block;padding:8px 4px;border-top:1px solid #f3f4f6;color:#1d4ed8;font-size:15px">'+l.t+'</a>'; }); h+='</div></details>'; }
+  let c1f=[]; for(let i=1;i<=22;i++) c1f.push({t:'Core 1 Full Practice Test '+i,u:ecFull('1201',i)});
+  let c2f=[]; for(let i=1;i<=34;i++) c2f.push({t:'Core 2 Full Practice Test '+i,u:ecFull('1202',i)});
+  let c1a=[]; for(let i=1;i<=8;i++) c1a.push({t:'Core 1 Acronyms Quiz pt. '+i,u:ecAcro('1201',i)});
+  let c2a=[]; for(let i=1;i<=8;i++) c2a.push({t:'Core 2 Acronyms Quiz pt. '+i,u:ecAcro('1202',i)});
+  group('Core 1 (1201) Full Practice Tests (22)',c1f);
+  group('Core 2 (1202) Full Practice Tests (34)',c2f);
+  group('Core 1 Topic Quizzes ('+EC_C1T.length+')',EC_C1T.map(s=>{const p=s.split('|');return {t:p[0],u:ecTopic('1201',p[1])};}));
+  group('Core 2 Topic Quizzes ('+EC_C2T.length+')',EC_C2T.map(s=>{const p=s.split('|');return {t:p[0],u:ecTopic('1202',p[1])};}));
+  group('Acronym Quizzes (16)',c1a.concat(c2a));
+  box.innerHTML=h;
+  count.textContent='Practice Tests'; score.textContent=''; bar.style.width='0%';
 }
 function update(){let done=0; for(const oi of order){ if(known.has(oi)||wrong.has(oi)) done++; } count.textContent='Card '+(idx+1)+'/'+order.length;score.textContent='Knew: '+known.size+' • Review: '+wrong.size;bar.style.width=(done/Math.max(1,order.length)*100)+'%';}
 function isRoundComplete(){ for(const oi of order){ if(!known.has(oi) && !wrong.has(oi)) return false; } return true; }
