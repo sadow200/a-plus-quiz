@@ -81,7 +81,7 @@ header,.controls,.progress,.stats,main>div,main>p{display:none !important}
 <label style="font-size:14px">Cards<select id="pSet"><option value="filter">Current exam filter</option><option value="all">All Exams</option><option value="1201">Core 1 – 1201</option><option value="1202">Core 2 – 1202</option></select></label>
 <label style="font-size:14px">Layout<select id="pLayout"><option value="c12">Compact — 12 per page</option><option value="c6">Large — 6 per page</option></select></label>
 <label style="font-size:14px">Sides<select id="pSides"><option value="single">Single-sided cutouts</option><option value="dbl">Double-sided (fronts + backs)</option></select></label>
-<p style="font-size:13px;color:#4b5563">Double-sided tip: print with Double-sided / Flip on long edge. No auto-duplex? Print odd pages, flip the stack, then print even pages.</p>
+<div id="duplexHelp" style="font-size:13px;color:#4b5563;line-height:1.5"></div>
 <div class="row"><button id="pGo" class="primary">Print</button><button id="pClose">Close</button></div>
 </div>
 <div id="printArea"></div>
@@ -287,6 +287,43 @@ function buildPrint(){
   document.getElementById('printArea').innerHTML=h;
   return ids.length;
 }
+function userBrowser(){ const ua=navigator.userAgent||''; if(/Edg\//.test(ua)) return 'edge'; if(/OPR\//.test(ua)) return 'chrome'; if(/Chrome\//.test(ua)) return 'chrome'; if(/Firefox\//.test(ua)) return 'firefox'; if(/Safari\//.test(ua)) return 'safari'; return 'other'; }
+function refreshDuplexHelp(){
+  const box=document.getElementById('duplexHelp'); if(!box) return;
+  const dbl=document.getElementById('pSides').value==='dbl';
+  const b=userBrowser();
+  const bname={chrome:'Chrome',edge:'Edge',firefox:'Firefox',safari:'Safari',other:'your browser'}[b];
+  let h='';
+  if(!dbl){
+    h='<b>Single-sided printing ('+bname+'):</b><ol style="margin:6px 0;padding-left:20px">'
+      +'<li>Paper: <b>Letter (8.5 × 11)</b>, Orientation: <b>Portrait</b>, Margins: <b>Default</b>, Scale: <b>100% / Default</b>.</li>'
+      +'<li>Uncheck <b>Headers and footers</b> so cards use the full page.</li>'
+      +'<li>Tip: print on <b>cardstock</b> if you have it, then cut along the borders.</li></ol>';
+  } else if(b==='chrome'||b==='edge'){
+    h='<b>Double-sided in '+(b==='edge'?'Edge':'Chrome')+':</b><ol style="margin:6px 0;padding-left:20px">'
+      +'<li>Click <b>Print</b> below. In the dialog set Destination to your printer, Pages <b>All</b>, Layout <b>Portrait</b>, Paper <b>Letter</b>, Margins <b>Default</b>, Scale <b>Default (100%)</b>.</li>'
+      +'<li>Uncheck <b>Headers and footers</b>.</li>'
+      +'<li>Check <b>Print on both sides</b> and choose <b>Flip on long edge</b>, then Print.</li>'
+      +'<li>No duplex printer? Print <b>Odd pages only</b> first, put the stack back in printed-side up (top edge first), then print <b>Even pages only</b>.</li></ol>';
+  } else if(b==='firefox'){
+    h+='<b>Double-sided in Firefox:</b><ol style="margin:6px 0;padding-left:20px">';
+    h+='<li>Click <b>Print</b> below. Set printer, <b>All</b> pages, <b>Portrait</b>, <b>Letter</b>, Scale <b>100%</b>. Open <b>More settings</b> and uncheck headers/footers.</li>';
+    h+='<li>Check <b>Print on both sides</b> and choose <b>Flip on long edge</b>, then Print.</li>';
+    h+='<li>No duplex printer? Print <b>Odd pages only</b>, flip the stack (printed side up, top edge first), then print <b>Even pages only</b>.</li></ol>';
+    h=h;
+  } else if(b==='safari'){
+    h='<b>Double-sided in Safari:</b><ol style="margin:6px 0;padding-left:20px">'
+      +'<li>Click <b>Print</b> below, then <b>Show Details</b>. Set printer, <b>All Pages</b>, Paper Size <b>US Letter</b>, Orientation <b>Portrait</b>, Scale <b>100%</b>.</li>'
+      +'<li>Check <b>Two-Sided</b>. In the <b>Layout</b> dropdown choose <b>Long-Edge binding</b>. Uncheck <b>Print headers and footers</b>, then Print.</li>'
+      +'<li>If Two-Sided is missing, your printer lacks duplex: print odd pages, flip the stack, then print even pages (Paper Handling &gt; Pages to Print).</li></ol>';
+  } else {
+    h='<b>Double-sided ('+bname+'):</b><ol style="margin:6px 0;padding-left:20px">'
+      +'<li>Click <b>Print</b> below. Use Paper <b>Letter</b>, <b>Portrait</b>, Scale <b>100%</b>, headers/footers <b>off</b>.</li>'
+      +'<li>Turn on <b>Double-sided / Two-sided</b> with <b>Flip on long edge</b> (long-edge binding).</li>'
+      +'<li>No duplex option? Print <b>odd pages</b>, flip the stack printed-side up, then print <b>even pages</b>.</li></ol>';
+  }
+  box.innerHTML=h;
+}
 function resetAll(){ clearPending(); known.clear(); wrong.clear(); wrongDetail={}; prevCardId=null; prevModeVal=''; prevDirVal=''; const pool=DATA.map((_,i)=>i).filter(typeof inFilter==='function'?inFilter:()=>true); order=fyShuffle([...pool]); idx=0; flipped=false; document.getElementById('review').style.display='none'; render(); }
 document.getElementById('next').onclick=()=>{ if(reviewOpen) return; clearPending();idx=(idx+1)%order.length;flipped=false;render();};
 document.getElementById('prev').onclick=()=>{ if(reviewOpen) return; clearPending();idx=(idx-1+order.length)%order.length;flipped=false;render();};
@@ -298,7 +335,9 @@ document.getElementById('shuffle').onclick=()=>{ if(reviewOpen) return; clearPen
 mode.onchange=()=>{clearPending();flipped=false;render();}; dir.onchange=()=>{clearPending();render();};
 document.getElementById('exam').onchange=e=>{ examFilter=e.target.value; applyExamFilter(); };
 document.getElementById('resetTop').onclick=()=>{ resetAll(); };
-document.getElementById('printBtn').onclick=()=>{ if(reviewOpen) return; clearPending(); document.getElementById('review').style.display='none'; document.getElementById('testsPanel').style.display='none'; const p=document.getElementById('printPanel'); p.style.display=(p.style.display==='block'?'none':'block'); };
+document.getElementById('printBtn').onclick=()=>{ if(reviewOpen) return; clearPending(); document.getElementById('review').style.display='none'; document.getElementById('testsPanel').style.display='none'; const p=document.getElementById('printPanel'); p.style.display=(p.style.display==='block'?'none':'block'); if(p.style.display==='block') refreshDuplexHelp(); };
+document.getElementById('pSides').onchange=()=>{ refreshDuplexHelp(); };
+document.getElementById('pLayout').onchange=()=>{ refreshDuplexHelp(); };
 document.getElementById('pClose').onclick=()=>{ document.getElementById('printPanel').style.display='none'; };
 document.getElementById('pGo').onclick=()=>{ const n=buildPrint(); if(!n){ alert('No cards in this set.'); return; } window.print(); };
 const searchBox=document.getElementById('search');
