@@ -46,10 +46,11 @@ header,.controls,.progress,.stats,main>div,main>p{display:none !important}
 .pcard .pf{text-align:center;margin-top:6px;line-height:1.35}
 .ppage.c12 .pcard .pf{font-size:8.5px}
 .ppage.c6 .pcard .pf{font-size:11px}
-.ppage.c12 .pback .pn{font-size:11px}
-.ppage.c12 .pback .pf{font-size:10px}
-.ppage.c6 .pback .pn{font-size:14px}
-.ppage.c6 .pback .pf{font-size:12.5px}
+.pback{display:flex;flex-direction:column;justify-content:center}
+.ppage.c12 .pback .pn{font-size:16px}
+.ppage.c12 .pback .pf{font-size:13px}
+.ppage.c6 .pback .pn{font-size:17px}
+.ppage.c6 .pback .pf{font-size:14px}
 .pcard .pdiv{border-top:1px solid #888;margin:6px 4px 0}
 .pfront{display:flex;flex-direction:column;justify-content:center}
 }
@@ -356,7 +357,22 @@ document.getElementById('printBtn').onclick=()=>{ if(reviewOpen) return; clearPe
 document.getElementById('pSides').onchange=()=>{ refreshDuplexHelp(); };
 document.getElementById('pLayout').onchange=()=>{ refreshDuplexHelp(); };
 document.getElementById('pClose').onclick=()=>{ document.getElementById('printPanel').style.display='none'; };
-document.getElementById('pGo').onclick=()=>{ const n=buildPrint(); if(!n){ alert('No cards in this set.'); return; } window.print(); };
+function fitBacks(){
+  const area=document.getElementById('printArea');
+  area.style.display='block'; area.style.position='absolute'; area.style.left='-99999px'; area.style.top='0'; area.style.visibility='hidden';
+  area.querySelectorAll('.pback').forEach(el=>{
+    const pn=el.querySelector('.pn'), pf=el.querySelector('.pf');
+    if(!pn||!pf) return;
+    let pnFs=parseFloat(getComputedStyle(pn).fontSize), pfFs=parseFloat(getComputedStyle(pf).fontSize), s=0;
+    while(el.scrollHeight>el.clientHeight+1 && s<14 && pnFs>8){
+      pnFs*=0.92; pfFs*=0.92;
+      pn.style.fontSize=pnFs+'px'; pf.style.fontSize=pfFs+'px';
+      s++;
+    }
+  });
+  area.style.display=''; area.style.position=''; area.style.left=''; area.style.top=''; area.style.visibility='';
+}
+document.getElementById('pGo').onclick=()=>{ const n=buildPrint(); fitBacks(); if(!n){ alert('No cards in this set.'); return; } window.print(); };
 const searchBox=document.getElementById('search');
 const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
 searchBox.addEventListener('keydown',e=>{ if(e.key!=='Enter')return; const q=norm(searchBox.value.trim()); if(!q)return; clearPending();
