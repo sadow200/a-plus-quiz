@@ -41,11 +41,12 @@ header,.controls,.progress,.stats,main>div,main>p{display:none !important}
 .ppage.c12 .pcard .pa{font-size:15px}
 .ppage.c6 .pcard .pa{font-size:22px}
 .pcard .pn{font-weight:700;text-align:center;margin-top:4px}
-.ppage.c12 .pcard .pn{font-size:12px}
-.ppage.c6 .pcard .pn{font-size:14px}
+.ppage.c12 .pcard .pn{font-size:14px}
+.ppage.c6 .pcard .pn{font-size:16px}
 .pcard .pf{text-align:center;margin-top:6px;line-height:1.35}
-.ppage.c12 .pcard .pf{font-size:10.5px}
-.ppage.c6 .pcard .pf{font-size:12.5px}
+.ppage.c12 .pcard .pf{font-size:12px}
+.ppage.c6 .pcard .pf{font-size:13.5px}
+.psingle{display:flex;flex-direction:column;justify-content:center}
 .pback{display:flex;flex-direction:column;justify-content:center}
 .ppage.c12 .pback .pn{font-size:16px}
 .ppage.c12 .pback .pf{font-size:13px}
@@ -285,7 +286,7 @@ function buildPrint(){
   const per=compact?12:6, cols=compact?3:2, cls=compact?'c12':'c6';
   const ids=printPool().slice().sort((x,y)=>DATA[x].a.localeCompare(DATA[y].a));
   const w=printWording();
-  const single=(di,w)=>{ const d=DATA[di]; const t=(w==='dumb'&&d.g)?d.g:d.f; return '<div class="pcard"><div class="pa">'+esc(d.a)+'</div><div class="pdiv"></div><div class="pn">'+esc(d.n)+'</div><div class="pf">'+esc(expandAcros(t,d.a))+'</div></div>'; };
+  const single=(di,w)=>{ const d=DATA[di]; const t=(w==='dumb'&&d.g)?d.g:d.f; return '<div class="pcard psingle"><div class="pa">'+esc(d.a)+'</div><div class="pdiv"></div><div class="pn">'+esc(d.n)+'</div><div class="pf">'+esc(expandAcros(t,d.a))+'</div></div>'; };
   const front=di=>'<div class="pcard pfront"><div class="pa">'+esc(DATA[di].a)+'</div></div>';
   const back=(di,w)=>{ const d=DATA[di]; const t=(w==='dumb'&&d.g)?d.g:d.f; return '<div class="pcard pback"><div class="pn">'+esc(d.n)+'</div><div class="pdiv"></div><div class="pf">'+esc(expandAcros(t,d.a))+'</div></div>'; };
   let h='';
@@ -361,7 +362,11 @@ function fitCards(){
   const area=document.getElementById('printArea');
   area.style.display='block'; area.style.position='absolute'; area.style.left='-99999px'; area.style.top='0'; area.style.visibility='hidden';
   area.querySelectorAll('.pcard').forEach(el=>{
-    const pn=el.querySelector('.pn'), pf=el.querySelector('.pf');
+    const pa=el.querySelector('.pa'), pn=el.querySelector('.pn'), pf=el.querySelector('.pf');
+    if(pa && pa.scrollWidth>pa.clientWidth+1){
+      let aFs=parseFloat(getComputedStyle(pa).fontSize), as=0;
+      while(pa.scrollWidth>pa.clientWidth+1 && as<10 && aFs>8){ aFs*=0.94; pa.style.fontSize=aFs+'px'; as++; }
+    }
     if(!pn||!pf) return;
     let pnFs=parseFloat(getComputedStyle(pn).fontSize), pfFs=parseFloat(getComputedStyle(pf).fontSize), s=0;
     while(el.scrollHeight>el.clientHeight+1 && s<14 && pnFs>8){
