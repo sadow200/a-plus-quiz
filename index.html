@@ -257,19 +257,19 @@ function finishTest(){
   const passMark=tRun.e==='1201'?83:(tRun.e==='1202'?78:80);
   let h='<div style="font-size:22px;font-weight:800">'+esc(tRun.title)+'</div>';
   h+='<div style="font-size:18px;margin:6px 0;color:'+(pct>=passMark?'#15803d':'#b45309')+'"><b>'+ok+'/'+n+' ('+pct+'%)</b> — '+(pct>=passMark?'Pass-level (real exam needs ~'+passMark+'%)':'Below pass (~'+passMark+'%) — work the misses below')+'</div>';
-  h+='<p style="font-size:14px;color:#4b5563"><span style="color:#b91c1c;font-weight:700">Red = your pick</span>, <span style="color:#15803d;font-weight:700">green = correct</span>.</p>';
+  h+='<p style="font-size:14px;color:#4b5563"><span style="color:#15803d;font-weight:700">✓ Your answer</span> = picked and correct &nbsp;•&nbsp; <span style="color:#b91c1c;font-weight:700">✗ Your answer</span> = picked but wrong &nbsp;•&nbsp; <span style="color:#b91c1c;font-weight:700">✗ Missed</span> = correct answer left unpicked.</p>';
   if(missed.length){
     h+='<p style="font-size:15px">Review '+missed.length+' missed:</p>';
     missed.forEach(qi=>{ const Q=TESTS.q[qi]; const p=tRun.picks[qi]||[];
-      h+='<div style="text-align:left;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0;background:#f9fafb">';
-      h+='<div style="font-size:15px;font-weight:600">'+esc(Q[0])+'</div>';
+      h+='<details open style="text-align:left;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0;background:#f9fafb"><summary style="cursor:pointer;font-size:15px;font-weight:600">'+esc(Q[0])+'</summary>';
       Q[1].forEach((o,oi)=>{ const isCorr=Q[2].includes(oi), isYou=p.includes(oi);
-        let col='#374151', bg='transparent', pre='';
-        if(isYou&&isCorr){ col='#15803d'; bg='#dcfce7'; pre='✓ your pick (correct)  '; }
-        else if(isYou){ col='#b91c1c'; bg='#fee2e2'; pre='✗ your pick  '; }
-        else if(isCorr){ col='#15803d'; bg='#dcfce7'; pre='✓ correct answer  '; }
-        h+='<div style="font-size:14px;color:'+col+';background:'+bg+';border-radius:6px;padding:5px 8px;margin-top:5px">'+pre+esc(o)+'</div>'; });
-      h+='</div>'; });
+        let mark='';
+        if(isYou&&isCorr) mark='<span style="color:#15803d;font-weight:700;white-space:nowrap;margin-left:8px">✓ Your answer</span>';
+        else if(isYou) mark='<span style="color:#b91c1c;font-weight:700;white-space:nowrap;margin-left:8px">✗ Your answer</span>';
+        else if(isCorr) mark='<span style="color:#b91c1c;font-weight:700;white-space:nowrap;margin-left:8px">✗ Missed</span>';
+        h+='<div style="font-size:14px;color:#111827;padding:5px 2px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;gap:10px"><span>'+esc(o)+'</span>'+mark+'</div>'; });
+      h+='<div style="color:#b91c1c;font-size:13px;font-weight:700;margin-top:8px">Your answer to this question is incorrect or incomplete.</div>';
+      h+='</details>'; });
   } else { h+='<p style="font-size:16px;color:#15803d;font-weight:700">Perfect score.</p>'; }
   h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
   if(missed.length) h+='<button id="tRetry" class="primary">Retry missed ('+missed.length+')</button>';
