@@ -198,6 +198,7 @@ function ecFull(exam,i){ return EC_BASE+"/comptia-a-plus-certification-practice-
 function ecAcro(exam,i){ return EC_BASE+"/comptia-a-plus-220-"+exam+"-exam-acronyms-quiz-part-"+i; }
 let tRun=null, tFilter='all';
 function tLocks(){
+  document.getElementById('hint').textContent='Answer every question, then Next — scoring and the full review stay right here on this page.';
   card.style.display='none';
   document.getElementById('flashBtns').style.display='none';
   document.getElementById('mcBtns').style.display='none';
@@ -231,12 +232,12 @@ function renderTestQ(){
   count.textContent='Test Q '+Math.min(tRun.pos+1,n)+'/'+n; score.textContent=''; bar.style.width=(Math.min(tRun.pos+1,n)/n*100)+'%';
   if(tRun.pos>=n) return finishTest();
   const qi=tRun.qids[tRun.pos]; const Q=TESTS.q[qi]; const need=Q[3]||0;
-  let h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-size:15px;font-weight:800">'+esc(tRun.title)+'</div><button id="tExit">Exit</button></div>';
-  h+='<div style="font-size:13px;color:#6b7280;margin:4px 0 10px">Question '+(tRun.pos+1)+' of '+n+(need?' — <b>Select '+need+' answers</b>':'')+'</div>';
-  h+='<div style="font-size:17px;font-weight:600;text-align:left;margin-bottom:10px">'+esc(Q[0])+'</div>';
   const picked=tRun.picks[qi]||[];
+  let h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-size:15px;font-weight:800">'+esc(tRun.title)+'</div><button id="tExit">Exit</button></div>';
+  h+='<div style="font-size:13px;color:#6b7280;margin:4px 0 10px">Question '+(tRun.pos+1)+' of '+n+(need?' — <b>Select '+need+' answers</b> <span style="color:#1d4ed8;font-weight:700">('+picked.length+' of '+need+' selected)</span>':'')+'</div>';
+  h+='<div style="font-size:17px;font-weight:600;text-align:left;margin-bottom:10px">'+esc(Q[0])+'</div>';
   Q[1].forEach((o,oi)=>{ const on=picked.includes(oi);
-    h+='<button class="tOpt" data-o="'+oi+'" style="display:block;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border-radius:10px;border:2px solid '+(on?'#1d4ed8':'#d1d5db')+';background:'+(on?'#eff6ff':'#fff')+';font-size:15px;cursor:pointer">'+esc(o)+'</button>'; });
+    h+='<button class="tOpt" data-o="'+oi+'" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border-radius:10px;border:'+(on?'3px solid #1d4ed8':'2px solid #d1d5db')+';background:'+(on?'#dbeafe':'#fff')+';font-size:15px;cursor:pointer;'+(on?'font-weight:700;color:#1e3a8a':'color:#111827')+'"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid '+(on?'#1d4ed8':'#9ca3af')+';background:'+(on?'#1d4ed8':'#fff')+';color:#fff;font-size:13px;font-weight:800">'+(on?'✓':'')+'</span><span style="flex:1">'+esc(o)+'</span></button>'; });
   h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="tNext" class="primary">Next</button><button id="tSkip">Skip</button></div>';
   h+='<div style="font-size:12px;color:#9ca3af;margin-top:10px">Questions from ExamCompass — <a href="'+esc(tRun.url)+'" target="_blank" rel="noopener">view original</a></div>';
   box.innerHTML=h;
@@ -288,7 +289,7 @@ function renderTestList(){
       +'<span style="flex:1;font-size:15px;color:#111827">'+esc(z.t)+'</span>'
       +'<span style="font-size:12px;color:#6b7280;white-space:nowrap">'+z.q.length+' q</span>'
       +'<a href="'+esc(z.u)+'" target="_blank" rel="noopener" style="font-size:13px;color:#1d4ed8;white-space:nowrap">site ↗</a></div>'; }); return h; }
-  function group(title,pred){ h+='<details style="margin:10px 0;border:1px solid #e5e7eb;border-radius:10px;padding:10px"><summary style="font-weight:700;cursor:pointer">'+title+'</summary><div style="margin-top:6px">'+rows(pred)+'</div></details>'; }
+  function group(title,pred){ const ks=Object.keys(Z).filter(pred); if(!ks.length) return; h+='<details style="margin:10px 0;border:1px solid #e5e7eb;border-radius:10px;padding:10px"><summary style="font-weight:700;cursor:pointer">'+title+'</summary><div style="margin-top:6px">'+rows(pred)+'</div></details>'; }
   h='<div style="font-size:20px;font-weight:800">Practice Tests — take them right here</div>';
   h+='<p style="font-size:14px;color:#4b5563">All '+Object.keys(Z).length+' ExamCompass tests run fully on this page — questions, scoring and review included. "site ↗" opens the original if you want it.</p>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="tf" data-f="all" style="'+(tFilter==='all'?'background:#1d4ed8;color:#fff':'')+'">All</button><button class="tf" data-f="1201" style="'+(tFilter==='1201'?'background:#1d4ed8;color:#fff':'')+'">Core 1</button><button class="tf" data-f="1202" style="'+(tFilter==='1202'?'background:#1d4ed8;color:#fff':'')+'">Core 2</button></div>';
