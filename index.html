@@ -239,7 +239,7 @@ function renderTestQ(){
   h+='<div style="font-size:17px;font-weight:600;text-align:left;margin-bottom:10px">'+esc(Q[0])+'</div>';
   Q[1].forEach((o,oi)=>{ const on=picked.includes(oi);
     h+='<button class="tOpt" data-o="'+oi+'" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border-radius:10px;border:'+(on?'3px solid #1d4ed8':'2px solid #d1d5db')+';background:'+(on?'#dbeafe':'#fff')+';font-size:15px;cursor:pointer;'+(on?'font-weight:700;color:#1e3a8a':'color:#111827')+'"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid '+(on?'#1d4ed8':'#9ca3af')+';background:'+(on?'#1d4ed8':'#fff')+';color:#fff;font-size:13px;font-weight:800">'+(on?'✓':'')+'</span><span style="flex:1">'+esc(o)+'</span></button>'; });
-  h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="tNext" class="primary">Next</button><button id="tSkip">Skip</button></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="tNext" class="primary">Next</button><button id="tSkip">Come back to this</button></div>';
   h+='<div style="font-size:12px;color:#9ca3af;margin-top:10px">Questions from ExamCompass — <a href="'+esc(tRun.url)+'" target="_blank" rel="noopener">view original</a></div>';
   box.innerHTML=h;
   box.querySelectorAll('.tOpt').forEach(b=>b.onclick=()=>{ const oi=+b.dataset.o; let p=(tRun.picks[qi]||[]).slice();
@@ -248,7 +248,7 @@ function renderTestQ(){
     else { if(p.includes(oi)) p=p.filter(x=>x!==oi); else p.push(oi); }
     tRun.picks[qi]=p; renderTestQ(); });
   document.getElementById('tExit').onclick=()=>{ tRun=null; renderTestList(); };
-  document.getElementById('tSkip').onclick=()=>{ tRun.picks[qi]=[]; tRun.pos++; renderTestQ(); };
+  document.getElementById('tSkip').onclick=()=>{ if(tRun.pos < tRun.qids.length-1){ const q=tRun.qids.splice(tRun.pos,1)[0]; tRun.qids.push(q); renderTestQ(); } else { tRun.picks[qi]=[]; tRun.pos++; renderTestQ(); } };
   document.getElementById('tNext').onclick=()=>{ const p=tRun.picks[qi]||[]; if(!p.length){ const b=document.getElementById('tNext'); b.style.opacity=.4; setTimeout(()=>{b.style.opacity=1;},350); return; } tRun.pos++; renderTestQ(); };
 }
 function finishTest(){
