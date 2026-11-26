@@ -223,8 +223,8 @@ function startMix(e,n){
   renderTestQ();
 }
 function tIsRight(qi){
-  const Q=TESTS.q[qi]; const p=(tRun.picks[qi]||[]).slice().sort().join(','); const a=Q[2].slice().sort().join(',');
-  return p!=='' && p===a;
+  const Q=TESTS.q[qi]; const p=tRun.picks[qi]||[];
+  return p.some(x=>Q[2].includes(x));
 }
 function renderTestQ(){
   const box=document.getElementById('testsPanel'); box.style.display='block'; tLocks();
@@ -258,6 +258,7 @@ function finishTest(){
   let h='<div style="font-size:22px;font-weight:800">'+esc(tRun.title)+'</div>';
   h+='<div style="font-size:18px;margin:6px 0;color:'+(pct>=passMark?'#15803d':'#b45309')+'"><b>'+ok+'/'+n+' ('+pct+'%)</b> — '+(pct>=passMark?'Pass-level (real exam needs ~'+passMark+'%)':'Below pass (~'+passMark+'%) — work the misses below')+'</div>';
   h+='<p style="font-size:14px;color:#4b5563"><span style="color:#15803d;font-weight:700">✓ Your answer</span> = picked and correct &nbsp;•&nbsp; <span style="color:#b91c1c;font-weight:700">✗ Your answer</span> = picked but wrong &nbsp;•&nbsp; <span style="color:#b91c1c;font-weight:700">✗ Missed</span> = correct answer left unpicked.</p>';
+  h+='<p style="font-size:13px;color:#6b7280;margin-top:-6px">Scoring: a multi-answer question counts as correct when at least one of your picks is a correct answer — the marks below still show the full picture.</p>';
   if(missed.length){
     h+='<p style="font-size:15px">Review '+missed.length+' missed:</p>';
     missed.forEach(qi=>{ const Q=TESTS.q[qi]; const p=tRun.picks[qi]||[];
