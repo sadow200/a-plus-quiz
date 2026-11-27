@@ -106,7 +106,7 @@ header,.controls,.progress,.stats,main>div,main>p{display:none !important}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>(function(){try{var s=localStorage.getItem('aqSkin');if(s!=='old')s='new';document.documentElement.setAttribute('data-skin',s);var o=document.getElementById('cssOld');if(o)o.disabled=(s!=='old');}catch(e){}})();</script>
+<script>(function(){try{var s=localStorage.getItem('aqSkin');if(s!=='old')s='new';document.documentElement.setAttribute('data-skin',s);var t=localStorage.getItem('aqTheme');if(t!=='dark'&&t!=='light')t='dark';document.documentElement.setAttribute('data-theme',t);var o=document.getElementById('cssOld');if(o)o.disabled=(s!=='old');}catch(e){}})();</script>
 </head>
 <body>
 <header>
@@ -155,7 +155,7 @@ header,.controls,.progress,.stats,main>div,main>p{display:none !important}
 <script>
 (function(){var S='aqSkin',T='aqTheme';var skin=null,theme=null;try{skin=localStorage.getItem(S);theme=localStorage.getItem(T)}catch(e){}
 if(skin!=='old'&&skin!=='new')skin='new';
-if(theme!=='dark'&&theme!=='light'){theme=(window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}
+if(theme!=='dark'&&theme!=='light')theme='dark';
 function ap(){document.documentElement.setAttribute('data-skin',skin);document.documentElement.setAttribute('data-theme',theme);
 var o=document.getElementById('cssOld'),n=document.getElementById('cssNew');if(o)o.disabled=(skin!=='old');if(n)n.disabled=(skin!=='new');
 var sb=document.getElementById('skinBtn');if(sb)sb.textContent=(skin==='new'?'Old style':'New style');
